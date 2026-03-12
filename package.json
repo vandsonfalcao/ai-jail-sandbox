@@ -1,8 +1,8 @@
 {
-  "name": "ai-jail",
+  "name": "ai-jail-sandbox",
   "version": "0.1.0",
   "description": "Sandbox segura para agentes de IA usando Docker",
-  "main": "dist/index.js",
+  "main": "dist/cli.js",
   "bin": {
     "ai-jail": "dist/cli.js"
   },
