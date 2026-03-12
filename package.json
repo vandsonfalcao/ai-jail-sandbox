@@ -4,7 +4,7 @@
   "description": "Sandbox segura para agentes de IA usando Docker",
   "main": "dist/cli.js",
   "bin": {
-    "ai-jail": "dist/cli.js"
+    "ai-jail-sandbox": "dist/cli.js"
   },
   "files": [
     "dist",

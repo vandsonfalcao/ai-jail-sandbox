@@ -1,6 +1,8 @@
 # AI-Jail Sandbox: Sandbox Segura para o Gemini CLI
 
-**AI-Jail Sandbox** é uma ferramenta CLI oficial publicada no NPM para executar o agente de IA Gemini em um ambiente Docker isolado, protegendo seu sistema host de comandos inseguros e vazamento de dados.
+> ⚠️ **ATENÇÃO: Este produto é EXPERIMENTAL e está em fase de testes.** O uso em ambientes críticos não é recomendado sem a devida auditoria.
+
+**AI-Jail Sandbox** é uma ferramenta CLI oficial para executar o agente de IA Gemini em um ambiente Docker isolado, protegendo seu sistema host de comandos inseguros e vazamento de dados.
 
 ## Pré-requisitos
 
@@ -23,22 +25,22 @@ pnpm add -g ai-jail-sandbox
 
 ## Como Usar
 
-Execute o `ai-jail` de dentro de qualquer diretório de projeto:
+Execute o `ai-jail-sandbox` de dentro de qualquer diretório de projeto:
 
 ### 1. Iniciar o Agente de IA (Modo Padrão)
 ```bash
-ai-jail
+ai-jail-sandbox
 ```
 
 ### 2. Passar uma Pergunta Direta
 ```bash
-ai-jail "Explique o código neste diretório"
+ai-jail-sandbox "Explique o código neste diretório"
 ```
 
 ### 3. Modo Lockdown (Segurança Máxima)
 Para rodar a IA sem qualquer acesso à rede externa:
 ```bash
-ai-jail --lockdown
+ai-jail-sandbox --lockdown
 ```
 
 ## Arquitetura de Segurança
