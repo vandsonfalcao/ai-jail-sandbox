@@ -1,0 +1,35 @@
+{
+  "name": "ai-jail",
+  "version": "0.1.0",
+  "description": "Sandbox segura para agentes de IA usando Docker",
+  "main": "dist/index.js",
+  "bin": {
+    "ai-jail": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "docker",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "dev": "vitest",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "sandbox",
+    "docker",
+    "security",
+    "gemini"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "execa": "^8.0.0"
+  }
+}
