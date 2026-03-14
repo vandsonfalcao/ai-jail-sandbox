@@ -39,5 +39,4 @@ jobs:
         run: pnpm run test
 
       - name: Publish to NPM
-        # Com Trusted Publishing, não precisamos mais passar o NODE_AUTH_TOKEN via env
         run: npm publish --access public --provenance
