@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -36,6 +39,5 @@ jobs:
         run: pnpm run test
 
       - name: Publish to NPM
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # Com Trusted Publishing, não precisamos mais passar o NODE_AUTH_TOKEN via env
+        run: npm publish --access public --provenance
