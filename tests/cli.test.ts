@@ -15,14 +15,14 @@ describe('ai-jail-sandbox (Suíte Completa de Segurança e Integração)', () =>
   }, testTimeout);
 
   it('2. deve repassar argumentos diretamente para o Gemini CLI', async () => {
-    // Testamos se ele aceita um argumento que não é flag e tenta rodar
-    // Como o gemini-cli sem API KEY falha, verificamos apenas se o comando foi disparado corretamente
-    const { stdout, stderr } = await execa('node', [CLI_PATH, 'hello'], { 
+    // Testamos se ele aceita um argumento (ex: help) e o repassa para o Gemini
+    // O comando 'help' não exige autenticação e retorna rapidamente
+    const { stdout, stderr } = await execa('node', [CLI_PATH, 'help'], { 
       reject: false,
-      timeout: testTimeout 
+      timeout: testTimeout
     });
-    // Se ele tentou rodar o gemini, ele deve reclamar da API KEY ou mostrar erro do gemini, não do docker
-    expect(stdout + stderr).toMatch(/gemini|API_KEY/i);
+    // Se ele repassou o comando, a saída deve conter a ajuda da CLI do Gemini
+    expect(stdout + stderr).toMatch(/gemini/i);
   }, testTimeout);
 
   it('3. deve bloquear internet com a flag --lockdown', async () => {

@@ -48,7 +48,7 @@ async function run() {
   }
 
   // 3. Preparar flags do Docker
-  const dockerFlags = ['run', '--rm'];
+  const dockerFlags = ['run', '--rm', '--init'];
 
   if (lockdown) {
     dockerFlags.push('--network', 'none');
@@ -79,6 +79,13 @@ async function run() {
     fs.mkdirSync(cacheDir, { recursive: true });
   }
   dockerFlags.push('-v', `${cacheDir}:/root/.npm`);
+
+  // Configurações do Gemini (Persistência)
+  const geminiConfigDir = path.join(os.homedir(), '.ai-jail-sandbox', 'config', 'gemini');
+  if (!fs.existsSync(geminiConfigDir)) {
+    fs.mkdirSync(geminiConfigDir, { recursive: true });
+  }
+  dockerFlags.push('-v', `${geminiConfigDir}:/root/.gemini`);
 
   // Proteção de arquivos sensíveis (Mascaramento)
   if (!allowSecrets) {
@@ -115,11 +122,11 @@ async function run() {
   }
 
   // Repassar variáveis de terminal para suporte a cores
-  if (process.env.TERM) {
-    dockerFlags.push('-e', `TERM=${process.env.TERM}`);
-  }
-  if (process.env.COLORTERM) {
-    dockerFlags.push('-e', `COLORTERM=${process.env.COLORTERM}`);
+  const passthroughEnvs = ['TERM', 'COLORTERM'];
+  for (const env of passthroughEnvs) {
+    if (process.env[env]) {
+      dockerFlags.push('-e', `${env}=${process.env[env]}`);
+    }
   }
 
   dockerFlags.push(imageName);
