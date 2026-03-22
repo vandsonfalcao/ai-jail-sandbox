@@ -3,7 +3,7 @@ FROM node:20-bookworm-slim
 # Instalar dependências básicas do sistema e o Gemini CLI globalmente
 RUN apt-get update \
   && apt-get install -y git ca-certificates curl iputils-ping \
-  && npm install -g @google/gemini-cli@latest \
+  && npm install -g @google/gemini-cli@0.34.0 \
   && mkdir -p /root/.gemini \
   && rm -rf /var/lib/apt/lists/*
 

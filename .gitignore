@@ -30,3 +30,4 @@ coverage/
 .idea/
 *.swp
 *.swo
+\n# Logs do Sandbox\nlogs/

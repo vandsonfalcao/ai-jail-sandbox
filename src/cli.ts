@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'child_process';
+import { execa } from 'execa';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -11,10 +12,13 @@ async function run() {
   let allowSecrets = false;
   let readOnly = false;
   let unlimited = false;
+  let debug = false;
+  let apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
   const userArgs: string[] = [];
 
   // Parsear argumentos
-  for (const arg of args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
     if (arg === '--lockdown') {
       lockdown = true;
     } else if (arg === '--allow-secrets') {
@@ -23,6 +27,10 @@ async function run() {
       readOnly = true;
     } else if (arg === '--unlimited') {
       unlimited = true;
+    } else if (arg === '--debug') {
+      debug = true;
+    } else if (arg === '--key' && i + 1 < args.length) {
+      apiKey = args[++i];
     } else {
       userArgs.push(arg);
     }
@@ -80,11 +88,57 @@ async function run() {
   }
   dockerFlags.push('-v', `${cacheDir}:/root/.npm`);
 
-  // Configurações do Gemini (Persistência)
+  // Configurações do Gemini (Persistência e Confiança)
   const geminiConfigDir = path.join(os.homedir(), '.ai-jail-sandbox', 'config', 'gemini');
+  const settingsPath = path.join(geminiConfigDir, 'settings.json');
+
+  // Carregar configurações existentes
+  let settings: any = { trustedWorkspaces: [] as string[] };
+  if (fs.existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+    } catch (e) {}
+  }
+
+  // Se a chave não foi passada por env ou flag, tenta carregar do settings
+  if (!apiKey && settings.apiKey) {
+    apiKey = settings.apiKey;
+  }
+
+  // Validar e Injetar API Key (Mecanismo Obrigatório)
+  // Verificamos se já existe uma autenticação real (API Key no settings ou credenciais)
+  let isAlreadyAuthenticated = fs.existsSync(path.join(geminiConfigDir, 'credentials.json')) || !!settings.apiKey || !!settings.authenticated;
+  
+  if (apiKey) {
+    // Persistir a chave se ela for nova ou diferente
+    if (settings.apiKey !== apiKey) {
+      settings.apiKey = apiKey;
+      if (!fs.existsSync(geminiConfigDir)) {
+        fs.mkdirSync(geminiConfigDir, { recursive: true });
+      }
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    }
+    dockerFlags.push('-e', `GEMINI_API_KEY=${apiKey}`);
+    dockerFlags.push('-e', `GOOGLE_API_KEY=${apiKey}`);
+  } else if (!isAlreadyAuthenticated) {
+    console.error('\n[ERRO] API Key não encontrada!');
+    console.error('Para evitar travamentos no terminal, o fornecimento da chave é obrigatório no primeiro uso.');
+    console.error('\nComo resolver:');
+    console.error('1. Use a flag: ai-jail-sandbox --key SUA_CHAVE_AQUI');
+    console.error('2. Ou exporte: export GEMINI_API_KEY=SUA_CHAVE_AQUI\n');
+    process.exit(1);
+  }
+
   if (!fs.existsSync(geminiConfigDir)) {
     fs.mkdirSync(geminiConfigDir, { recursive: true });
   }
+
+  // Pré-configurar confiança do workspace para evitar crash de reinício
+  if (!settings.trustedWorkspaces.includes('/workspace')) {
+    settings.trustedWorkspaces.push('/workspace');
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  }
+
   dockerFlags.push('-v', `${geminiConfigDir}:/root/.gemini`);
 
   // Proteção de arquivos sensíveis (Mascaramento)
@@ -136,13 +190,46 @@ async function run() {
   if (userArgs.length > 0 && systemCommands.includes(userArgs[0])) {
     dockerFlags.push(...userArgs);
   } else {
+    // Modo interativo normal
     dockerFlags.push('gemini', ...userArgs);
   }
 
   // 5. Executar
+  const logsDir = path.join(currentDir, 'logs');
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+  const logFileName = `debug_${dateStr}_${timeStr}.log`;
+  const logPath = path.join(logsDir, logFileName);
+  
+  const logMessage = (msg: string) => {
+    const ts = new Date().toISOString();
+    fs.appendFileSync(logPath, `[${ts}] ${msg}\n`);
+    if (debug) console.log(`[DEBUG] ${msg}`);
+  };
+
+  logMessage(`Iniciando Docker. Comando: docker ${dockerFlags.join(' ')}`);
+
   const dockerProcess = spawn('docker', dockerFlags, { stdio: 'inherit' });
+
   dockerProcess.on('close', (code) => {
+    logMessage(`Docker finalizado com código ${code}`);
+    
+    // Se o código for de erro, tentamos resetar o terminal
+    if (code !== 0 && code !== null) {
+      console.log(`\n[!] O processo Docker encerrou com erro (código ${code}).`);
+    }
+    
     process.exit(code || 0);
+  });
+
+  dockerProcess.on('error', (err) => {
+    logMessage(`Erro ao disparar Docker: ${err.message}`);
+    process.exit(1);
   });
 }
 

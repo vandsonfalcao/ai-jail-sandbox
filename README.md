@@ -50,20 +50,27 @@ Execute para abrir o terminal interativo do Gemini:
 ```bash
 ai-jail-sandbox
 ```
+> **Dica:** Na primeira execução, use `--key SUA_CHAVE` para salvar sua API Key e não precisar digitá-la novamente.
 
-### 2. Passar um Comando ou Pergunta Direta
+### 2. Fornecer ou Atualizar API Key
+Você pode passar a chave diretamente via argumento ou variável de ambiente. A chave será persistida para usos futuros:
+```bash
+ai-jail-sandbox --key SUA_CHAVE_AQUI
+```
+
+### 3. Passar um Comando ou Pergunta Direta
 Envie prompts diretamente sem entrar no modo interativo:
 ```bash
 ai-jail-sandbox "Explique a lógica deste diretório"
 ```
 
-### 3. Modo Lockdown (Segurança Máxima)
+### 4. Modo Lockdown (Segurança Máxima)
 Desativa totalmente o acesso à internet dentro do container:
 ```bash
 ai-jail-sandbox --lockdown
 ```
 
-### 4. Modo Somente-Leitura (Consulta Segura)
+### 5. Modo Somente-Leitura (Consulta Segura)
 Garante que a IA **não possa alterar nenhum arquivo** no seu projeto:
 ```bash
 ai-jail-sandbox --read-only
